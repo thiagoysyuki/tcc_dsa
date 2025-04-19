@@ -16,8 +16,7 @@ st.write("# Análise de Portfólio de Investimentos")
 
 data = pd.read_parquet(path= 'https://github.com/thiagoysyuki/tcc_dsa/blob/main/data/processed/merged/merged_indexes_10y.parquet?raw=true')
 
-get_tickers = requests.get("https://github.com/thiagoysyuki/tcc_dsa/blob/main/data/lista_tickers.json?raw=true")
-tickers = json.load(get_tickers.text)["stocks"]
+tickers = data.columns
 
 # Seletores
 
