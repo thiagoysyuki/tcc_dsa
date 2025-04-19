@@ -17,8 +17,7 @@ tickers = json.load(open("data\lista_tickers.json", "r"))["stocks"]
 
 # Seletores
 
-seletor = st.multiselect("Ações", tickers,placeholder="Selecione as ações")
-
+seletor = st.multiselect("Ações", tickers,placeholder="Selecione as ações", default=['ITUB4', 'B3SA3', 'PETR4'])
 filtered_data = data[seletor]
 
 sel_data = st.date_input("Selecione o intervalo de datas", value=(filtered_data.index.min(), filtered_data.index.max()), format="DD/MM/YYYY")

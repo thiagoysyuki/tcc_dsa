@@ -1,5 +1,4 @@
 .env
-data/processed/merged/**
 data/processed/prices_hist/**
 data/raw/**
 /.quarto/
