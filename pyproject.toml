@@ -4,7 +4,9 @@ version = "0.1.0"
 description = ""
 authors = ["thiagoysyuki <thiagoyukipdi@gmail.com>"]
 readme = "README.md"
-
+packages = [
+    { include = "ETL/modules" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.12"
