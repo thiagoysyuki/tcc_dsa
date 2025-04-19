@@ -7,13 +7,17 @@ import plotly.express as px
 import json
 from pypfopt.expected_returns import mean_historical_return
 from pypfopt.risk_models import CovarianceShrinkage
-import os
+import requests
+
+
 
 # Load Data
 st.write("# Análise de Portfólio de Investimentos")
 
 data = pd.read_parquet(path= 'https://github.com/thiagoysyuki/tcc_dsa/blob/main/data/processed/merged/merged_indexes_10y.parquet?raw=true')
-tickers = json.load(open("https://github.com/thiagoysyuki/tcc_dsa/blob/main/data/lista_tickers.json?raw=true", "r"))["stocks"]
+
+get_tickers = requests.get("https://github.com/thiagoysyuki/tcc_dsa/blob/main/data/lista_tickers.json?raw=true")
+tickers = json.load(get_tickers.text)["stocks"]
 
 # Seletores
 
