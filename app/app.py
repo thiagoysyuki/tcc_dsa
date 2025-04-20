@@ -9,4 +9,8 @@ pg = st.navigation(
     ]
 )
 
+if "filtered_data" not in st.session_state:
+    st.session_state.filtered_data = None
+
+
 pg.run()

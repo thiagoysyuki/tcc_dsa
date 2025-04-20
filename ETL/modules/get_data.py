@@ -87,4 +87,37 @@ def merge_data(input_dir, output_file):
     # Save the merged DataFrame to a Parquet file
     merged_pivot.to_parquet(output_file)
     print(f"Merged DataFrame saved to {output_file}")
-      
+
+class Selic:   
+    
+    def __init__(self, key:str, start_date: str, end_date:str , country:str):
+        self.start_date = None
+        self.end_date = None
+        self.country = country
+        self.key = key
+        self.data = None
+        
+
+    def get_data(self):
+        
+
+        params = {
+                    'start': self.start_date,  # Start date in YYYY-MM-DD format
+                    'end': self.end_date,  # Current date in YYYY-MM-DD format
+                    'country': 'brazil', 
+                    'token': self.key
+        }
+       
+        url = "https://brapi.dev/api/v2/prime-rate"
+        r = requests.get(url, params= params)
+              
+        if r.status_code == 200:
+            self.data = r.json()
+            return print("Data obtained with Sucess!")
+        else:
+            return print("An error has occurred")
+    
+    def save_json(self, path):             
+        with open(path + 'selic.json', 'w') as f:
+            json.dump(self.data, f)
+

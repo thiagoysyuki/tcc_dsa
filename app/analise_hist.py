@@ -5,77 +5,147 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
 import json
-from pypfopt.expected_returns import mean_historical_return
+from pypfopt.expected_returns import mean_historical_return, ema_historical_return
 from pypfopt.risk_models import CovarianceShrinkage
-import requests
+import locale       
 
+locale.setlocale(locale.LC_TIME, "pt_BR.UTF-8")
 
 
 # Load Data
 st.write("# Análise de Portfólio de Investimentos")
 
-data = pd.read_parquet(path= 'https://github.com/thiagoysyuki/tcc_dsa/blob/main/data/processed/merged/merged_indexes_10y.parquet?raw=true')
+selic = pd.read_parquet(path= 'data/raw/selic/selic.parquet')
+selic.set_index('date', inplace=True)
+selic['value'] = selic['value'].astype(float)
+stocks = pd.read_parquet(path= 'data/processed/merged/merged_prices_10y.parquet')
+indices = pd.read_parquet(path= 'data/processed/merged/merged_indexes_10y.parquet')
+indices.columns = indices.columns.str.replace('^', '', regex=False)
 
-tickers = data.columns
+trading_days = stocks.index.to_series().groupby(stocks.index.year).nunique()
+trading_days = pd.DataFrame({'ano':trading_days.index,'dias_uteis':trading_days.values})
+
+st.write("Horizonte disponível:",trading_days.T)
+
+tickers = stocks.columns
+indexes = indices.columns
 
 # Seletores
 
-seletor = st.multiselect("Ações", tickers,placeholder="Selecione as ações", default=['ITUB4', 'B3SA3', 'PETR4'])
-filtered_data = data[seletor]
+seletor_stock = st.multiselect("Ações", tickers,placeholder="Selecione as ações", default=['ITUB4', 'B3SA3', 'PETR4'])
+seletor_index = st.multiselect("Índices", indexes,placeholder="Selecione os índices")
 
-sel_data = st.date_input("Selecione o intervalo de datas", value=(filtered_data.index.min(), filtered_data.index.max()), format="DD/MM/YYYY")
+filtered_index_data = indices[seletor_index]
+filtered_stock_data = stocks[seletor_stock]
+
+sel_data = st.date_input("Selecione o intervalo de datas", value=(filtered_stock_data.index.min(), filtered_stock_data.index.max()), format="DD/MM/YYYY")
 
 #Filtrar dados
 
-filtered_data = filtered_data.loc[sel_data[0]:sel_data[1]]
+filtered_stock_data = filtered_stock_data.loc[sel_data[0]:sel_data[1]]
+filtered_index_data = filtered_index_data.loc[sel_data[0]:sel_data[1]]
 
-filtered_data_norm = filtered_data.copy()
+filtered_data = pd.merge(filtered_stock_data, filtered_index_data, left_index=True, right_index=True, how='inner')
 
-for i in filtered_data_norm.columns:
-    filtered_data_norm[i] = (filtered_data_norm[i]) / (filtered_data_norm[i][0])
+st.dataframe(filtered_data, use_container_width=True)
 
-st.write("Ganho percentual:" ) 
-st.write(filtered_data_norm.tail(1))
+simple_returns = filtered_data.pct_change().dropna()
+log_returns = np.log(filtered_data / filtered_data.shift(1)).dropna()
 
+cum_return = filtered_data.copy()
 
-fig, ax = plt.subplots()
-for column in filtered_data_norm.columns:
-    ax.plot(filtered_data_norm.index, filtered_data_norm[column], label=column)  # Adiciona uma linha para cada coluna
+for i in range(cum_return.shape[1]):  # Itera pelas colunas usando índices
+    cum_return.iloc[:, i] = cum_return.iloc[:, i] / cum_return.iloc[0, i]
 
-plt.title('Evolução das Ações')
-plt.xlabel('Índice (Datas)')
-plt.ylabel('Valores ajustados')
-plt.legend(title='Colunas')  # Legenda com título
-plt.grid(True)  # Adiciona uma grade ao gráfico
-plt.xticks(rotation=45)  # Rotaciona os rótulos do eixo X (se necessário)
-plt.tight_layout()  # Ajusta o layout para evitar sobreposição
-
-st.pyplot(fig)
-
-#st.line_chart(data=filtered_data, x=filtered_data.index, y=)
-
-returns = filtered_data.pct_change().dropna()
-
-#px.line(returns, x=returns.index, y=returns.columns, title='Evolução das Ações', labels={'x': 'Índice (Datas)', 'y': 'Valores ajustados'}).show()
-
-fig, ax = plt.subplots()
-for column in returns.columns:
-    ax.plot(returns.index, returns[column], label=column)  # Adiciona uma linha para cada coluna
-
-plt.title('Evolução das Ações')
-plt.xlabel('Índice (Datas)')
-plt.ylabel('Valores ajustados')
-plt.legend(title='Colunas')  # Legenda com título
-plt.grid(True)  # Adiciona uma grade ao gráfico
-plt.xticks(rotation=45)  # Rotaciona os rótulos do eixo X (se necessário)
-plt.tight_layout()  # Ajusta o layout para evitar sobreposição
-st.pyplot(fig)
+st.write("Retorno Total Acumulado" ) 
+st.write(cum_return.tail(1))
 
 
-mu = mean_historical_return(filtered_data, frequency=252).to_frame()
+stocks_graph = px.line(title='Retorno Acumulado', labels={'x': 'Índice (Datas)', 'y': 'Retorno simples'})
+for column in cum_return.columns:
+    stocks_graph.add_scatter(x=cum_return.index, y=cum_return[column], mode='lines', name=column)
+
+# Grafico das ações
+
+st.plotly_chart(stocks_graph, use_container_width=True)
+
+free_rate = selic['value'].tail(1).values[0]/100
+
+simple_returns_stats = simple_returns.describe().T
+
+simple_annualized_returns = pd.DataFrame({
+    'Retorno Anualizado': simple_returns_stats['mean'] * 250,
+    'Volatilidade Anualizada': simple_returns_stats['std'] * np.sqrt(250)
+})
+
+simple_annualized_returns['Sharpe ratio'] = simple_annualized_returns['Retorno Anualizado'] - free_rate / simple_annualized_returns['Volatilidade Anualizada']
+
+log_returns_stats = log_returns.describe().T
+
+log_annualized_returns = pd.DataFrame({
+    'Retorno Anualizado': log_returns_stats['mean'] * 250,
+    'Volatilidade Anualizada': log_returns_stats['std'] * np.sqrt(250)
+})
+
+
+
+st.write("Taxa SELIC atual é:", free_rate)
+
+log_annualized_returns['Sharpe ratio'] = log_annualized_returns['Retorno Anualizado'] - free_rate / log_annualized_returns['Volatilidade Anualizada']
+
+st.write("Estatísticas dos retornos diários simples:")
+st.dataframe(simple_returns_stats, use_container_width=True)
+
+st.write("Estatísticas dos retornos anualizados:")
+st.dataframe(simple_annualized_returns, use_container_width=True)
+
+st.write("Estatísticas dos retornos diários logarítmicos:")
+st.dataframe(log_returns_stats, use_container_width=True)
+
+st.write("Estatísticas dos retornos logarítmicos anualizados:")
+st.dataframe(log_annualized_returns, use_container_width=True)
+
+distribution_graph = px.histogram(log_returns,title='Distribuição diária de retornos', labels={'x': 'Retornos', 'y': 'Frequência'})
+for column in log_returns.columns:
+    distribution_graph.add_histogram(x=log_returns[column], name=column, opacity=0.75, histnorm='probability density')
+
+st.plotly_chart(distribution_graph, use_container_width=True)
+
+
+st.write("# Análise dos Retornos:")
+
+seletor_geometric = st.selectbox("Selecione o método de cálculo", ["Geométrico", "Aritmético"])
+if seletor_geometric == "Geométrico":
+    st.write("Retornos anualizados (Geométrico):")
+    mu = mean_historical_return(filtered_data, frequency=250, compounding=True).to_frame()
+else:
+    st.write("Retornos anualizados (Aritmético):")
+    mu = mean_historical_return(filtered_data, frequency=250, compounding=False).to_frame()
+
 mu = mu.reset_index()
 mu.columns = ['Ticker', 'Retorno Anualizado']
-S = CovarianceShrinkage(filtered_data).ledoit_wolf()
-st.write(
-    "Média de Retornos Anuais: ", mu, "Covariância: ", S
-)
+st.dataframe(mu, use_container_width=True)
+
+
+st.write("Retorno Anualizados (EMA):")
+span_select = st.slider("Selecione o período de suavização (EMA)", min_value=1, max_value=365, value=30, step=1)
+st.write(f"Período de suavização (EMA): {span_select} dias")
+ema_return = ema_historical_return(filtered_data, span=span_select, frequency=250).to_frame()
+ema_return = ema_return.reset_index()
+ema_return.columns = ['Ticker', 'Retorno Anualizado']
+st.dataframe(ema_return, use_container_width=True)
+
+st.write("Taxa SELIC")
+
+selic_graph = px.line(selic, x=selic.index,y=selic['value'], title='Taxa SELIC', labels={'x': 'Índice (Datas)', 'y': 'Taxa SELIC'})
+st.plotly_chart(selic_graph, use_container_width=True)
+
+
+ir_analse_riscos = st.button("Analisar Risco", key="analyze_risk")
+
+if ir_analse_riscos:
+    st.session_state['filtered_data'] = filtered_data
+    st.session_state['simple_returns'] = simple_returns
+    st.session_state['log_returns'] = log_returns
+    st.switch_page("analise_riscos.py")
+    

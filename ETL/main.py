@@ -2,6 +2,7 @@ from modules.get_data import Stock, merge_data
 import json
 import os
 
+
 with open('data\lista_tickers.json', 'r') as f:
     stocks = json.load(f)
     stocks = stocks['indexes']
