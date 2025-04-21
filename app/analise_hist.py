@@ -66,41 +66,6 @@ for column in cum_return.columns:
 
 st.plotly_chart(stocks_graph, use_container_width=True)
 
-free_rate = selic['value'].tail(1).values[0]/100
-
-simple_returns_stats = simple_returns.describe().T
-
-simple_annualized_returns = pd.DataFrame({
-    'Retorno Anualizado': simple_returns_stats['mean'] * 250,
-    'Volatilidade Anualizada': simple_returns_stats['std'] * np.sqrt(250)
-})
-
-simple_annualized_returns['Sharpe ratio'] = simple_annualized_returns['Retorno Anualizado'] - free_rate / simple_annualized_returns['Volatilidade Anualizada']
-
-log_returns_stats = log_returns.describe().T
-
-log_annualized_returns = pd.DataFrame({
-    'Retorno Anualizado': log_returns_stats['mean'] * 250,
-    'Volatilidade Anualizada': log_returns_stats['std'] * np.sqrt(250)
-})
-
-
-
-st.write("Taxa SELIC atual é:", free_rate)
-
-log_annualized_returns['Sharpe ratio'] = log_annualized_returns['Retorno Anualizado'] - free_rate / log_annualized_returns['Volatilidade Anualizada']
-
-st.write("Estatísticas dos retornos diários simples:")
-st.dataframe(simple_returns_stats, use_container_width=True)
-
-st.write("Estatísticas dos retornos anualizados:")
-st.dataframe(simple_annualized_returns, use_container_width=True)
-
-st.write("Estatísticas dos retornos diários logarítmicos:")
-st.dataframe(log_returns_stats, use_container_width=True)
-
-st.write("Estatísticas dos retornos logarítmicos anualizados:")
-st.dataframe(log_annualized_returns, use_container_width=True)
 
 distribution_graph = px.histogram(log_returns,title='Distribuição diária de retornos', labels={'x': 'Retornos', 'y': 'Frequência'})
 for column in log_returns.columns:
@@ -144,5 +109,8 @@ if ir_analse_riscos:
     st.session_state['filtered_data'] = filtered_data
     st.session_state['simple_returns'] = simple_returns
     st.session_state['log_returns'] = log_returns
+    st.session_state['selic'] = selic
+    st.session_state['trading_days'] = trading_days
+
     st.switch_page("analise_riscos.py")
     
