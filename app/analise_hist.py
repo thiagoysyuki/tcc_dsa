@@ -9,9 +9,6 @@ from pypfopt.expected_returns import mean_historical_return, ema_historical_retu
 from pypfopt.risk_models import CovarianceShrinkage
 import locale       
 
-locale.setlocale(locale.LC_TIME, "pt_BR.UTF-8")
-
-
 # Load Data
 st.write("# Análise de Portfólio de Investimentos")
 
