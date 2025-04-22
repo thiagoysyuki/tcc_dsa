@@ -6,8 +6,7 @@ import seaborn as sns
 import plotly.express as px
 import json
 from pypfopt.expected_returns import mean_historical_return, ema_historical_return
-from pypfopt.risk_models import CovarianceShrinkage
-import locale       
+ 
 
 # Load Data
 st.write("# Análise de Portfólio de Investimentos")
@@ -44,7 +43,6 @@ filtered_index_data = filtered_index_data.loc[sel_data[0]:sel_data[1]]
 
 filtered_data = pd.merge(filtered_stock_data, filtered_index_data, left_index=True, right_index=True, how='inner')
 
-st.dataframe(filtered_data, use_container_width=True)
 
 simple_returns = filtered_data.pct_change().dropna()
 log_returns = np.log(filtered_data / filtered_data.shift(1)).dropna()
@@ -66,23 +64,15 @@ for column in cum_return.columns:
 
 st.plotly_chart(stocks_graph, use_container_width=True)
 
-
-distribution_graph = px.histogram(log_returns,title='Distribuição diária de retornos', labels={'x': 'Retornos', 'y': 'Frequência'})
-for column in log_returns.columns:
-    distribution_graph.add_histogram(x=log_returns[column], name=column, opacity=0.75, histnorm='probability density')
-
-st.plotly_chart(distribution_graph, use_container_width=True)
-
-
 st.write("# Análise dos Retornos:")
 
 seletor_geometric = st.selectbox("Selecione o método de cálculo", ["Geométrico", "Aritmético"])
 if seletor_geometric == "Geométrico":
     st.write("Retornos anualizados (Geométrico):")
-    mu = mean_historical_return(filtered_data, frequency=250, compounding=True).to_frame()
+    mu = mean_historical_return(filtered_data, frequency=252, compounding=True).to_frame()
 else:
     st.write("Retornos anualizados (Aritmético):")
-    mu = mean_historical_return(filtered_data, frequency=250, compounding=False).to_frame()
+    mu = mean_historical_return(filtered_data, frequency=252, compounding=False).to_frame()
 
 mu = mu.reset_index()
 mu.columns = ['Ticker', 'Retorno Anualizado']

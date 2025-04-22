@@ -5,8 +5,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
 import scipy.stats as stats
-from misc.otm_oportfolio import var_gaussian
+from pypfopt.expected_returns import mean_historical_return
+from misc.otm_oportfolio import var_gaussian,cvar_historic, semideviation
 import os
+import statsmodels.api as sm
 
 selic = st.session_state['selic']
 data = st.session_state['filtered_data']
@@ -21,30 +23,40 @@ else:
 
 ## Statisticas dos retornos + Sharpe ratio
 
-simple_returns_stats = simple_returns.describe().T
-
-simple_annualized_returns = pd.DataFrame({
-    'Retorno Anualizado': simple_returns_stats['mean'] * 250,
-    'Volatilidade Anualizada': simple_returns_stats['std'] * np.sqrt(250)
-})
-
-simple_annualized_returns['Sharpe ratio'] = simple_annualized_returns['Retorno Anualizado'] - free_rate / simple_annualized_returns['Volatilidade Anualizada']
-
-log_returns_stats = log_returns.describe().T
-
-log_annualized_returns = pd.DataFrame({
-    'Retorno Anualizado': log_returns_stats['mean'] * 250,
-    'Volatilidade Anualizada': log_returns_stats['std'] * np.sqrt(250)
-})
-
-log_annualized_returns['Sharpe ratio'] = log_annualized_returns['Retorno Anualizado'] - free_rate / log_annualized_returns['Volatilidade Anualizada']
-
 st.write("Taxa SELIC atual é:", free_rate)
+
+st.write("Estatísticas dos retornos diários simples:")
+
 
 simples, log = st.tabs(["Simples","Logarítmico"])
 
 with simples:
+
     st.write("# Análise de Riscos")
+
+    retorno_anualizado = pd.DataFrame(mean_historical_return(data, log_returns=False, frequency=252))
+    retorno_anualizado.reset_index(inplace=True)
+    retorno_anualizado.columns = ['Ações','Retorno Anualizado']
+    volatilidade_anualizada = pd.DataFrame(simple_returns.std() * 252 ** 0.5)
+    volatilidade_anualizada.reset_index(inplace=True)
+    volatilidade_anualizada.columns = ['Ações','Volatilidade Anualizada']
+    dados_anualizados = pd.merge(retorno_anualizado, volatilidade_anualizada, on='Ações')
+    dados_anualizados['Sharpe Ratio'] = (dados_anualizados['Retorno Anualizado'] - free_rate) / dados_anualizados['Volatilidade Anualizada']
+
+        # Add a regression line to the scatter plot
+    fig = px.scatter(
+        title='Retorno vs. Volatilidade',
+        data_frame=dados_anualizados,
+        x='Retorno Anualizado',
+        y='Volatilidade Anualizada',
+        labels={'x': 'Retorno Anual', 'y': 'Volatilidade Anual'},
+        trendline="ols",  # Add Ordinary Least Squares (OLS) regression line
+        trendline_color_override='red',  # Change the color of the regression line
+
+    )
+    st.plotly_chart(fig, use_container_width=True)
+    
+    st.dataframe(dados_anualizados, use_container_width=True)
 
     tabs_desity = st.tabs(list(simple_returns.columns))
     for i, tab_name in enumerate(simple_returns.columns):
@@ -55,13 +67,7 @@ with simples:
             ax.set_title(f"Distribuição de Retornos - {tab_name}")
             ax.legend()
             st.pyplot(fig)
-
-
-    st.write("Estatísticas dos retornos diários simples:")
-    st.dataframe(simple_returns_stats, use_container_width=True)
-    st.write("Estatísticas dos retornos anualizados:")
-    st.dataframe(simple_annualized_returns, use_container_width=True)
-
+    
     st.write("## Desvios da Normalidade")
 
     skew_table = pd.DataFrame(columns=[
@@ -116,10 +122,67 @@ with simples:
     max_drawndow['Data do Máximo Drawdown'] = max_drawndow['Data do Máximo Drawdown'].dt.strftime('%d/%m/%Y')
     st.write(max_drawndow)
 
+    st.write("## Value at Risk (VaR)")
+
+    historical_var = pd.DataFrame(simple_returns.quantile(0.05))
+    historical_var.reset_index(inplace=True)
+    historical_var.columns = ['Ação', 'Histórico']
+    historical_var['Histórico'] = historical_var['Histórico'] * -1
+
+    z = stats.norm.ppf(0.05)
+    VaR_parametric = pd.DataFrame(
+        (simple_returns.mean() - z * simple_returns.std())
+    )
+
+    VaR_parametric.reset_index(inplace=True)
+    VaR_parametric.columns = ['Ação', 'Gaussiano']
+
+    VaR_fs = pd.DataFrame(var_gaussian(simple_returns, level=0.05, modified=True))
+    VaR_fs.reset_index(inplace=True)
+    VaR_fs.columns = ['Ação', 'Cornish-Fisher']
+
+    beyond_var_lg =pd.DataFrame(cvar_historic(simple_returns, level=0.05))
+    beyond_var_lg.reset_index(inplace=True)
+    beyond_var_lg.columns = ['Ação', 'Beyond VaR']
+    
+    VaR_simple = pd.merge(historical_var, VaR_parametric, on='Ação')
+    VaR_simple = pd.merge(VaR_simple, VaR_fs, on='Ação')
+    VaR_simple = pd.merge(VaR_simple, beyond_var_lg, on='Ação')
+
+    VaR_graph =px.bar(VaR_simple, x='Ação', y=['Histórico', 'Gaussiano', 'Cornish-Fisher'], title='Value at Risk (VaR)', labels={'x': 'Ação', 'y': 'VaR'})
+    VaR_graph.update_layout(barmode='group', xaxis_title='Ação', yaxis_title='VaR')
+
+    st.plotly_chart(VaR_graph, use_container_width=True)
+
+    st.write(VaR_simple)
+
+
 
 with log:
     
-    st.write("# Análise de Riscos")
+    st.write("# Análise de Riscos")    
+
+    retorno_anualizado_lg = pd.DataFrame(mean_historical_return(data, log_returns=True, frequency=252))
+    retorno_anualizado_lg.reset_index(inplace=True)
+    retorno_anualizado_lg.columns = ['Ações','Retorno Anualizado']
+    volatilidade_anualizada_lg = pd.DataFrame(log_returns.std() * 252 ** 0.5)
+    volatilidade_anualizada_lg.reset_index(inplace=True)
+    volatilidade_anualizada_lg.columns = ['Ações','Volatilidade Anualizada']
+    dados_anualizados_lg = pd.merge(retorno_anualizado_lg, volatilidade_anualizada_lg, on='Ações')
+    dados_anualizados_lg['Sharpe Ratio'] = (dados_anualizados_lg['Retorno Anualizado'] - free_rate) / dados_anualizados_lg['Volatilidade Anualizada']
+
+    # Add a regression line to the scatter plot
+    fig = px.scatter(
+        title='Retorno vs. Volatilidade',
+        data_frame=dados_anualizados_lg,
+        x='Retorno Anualizado',
+        y='Volatilidade Anualizada',
+        labels={'x': 'Retorno Anual', 'y': 'Volatilidade Anual'},
+        trendline="ols",  # Add Ordinary Least Squares (OLS) regression line
+        trendline_color_override='red',  # Change the color of the regression line
+    )
+    st.plotly_chart(fig, use_container_width=True)
+    st.write(dados_anualizados_lg, use_container_width=True)
 
     tabs_desity_lg = st.tabs(list(log_returns.columns))
     for i, tab_name in enumerate(log_returns.columns):
@@ -130,13 +193,6 @@ with log:
             ax.set_title(f"Distribuição de Retornos - {tab_name}")
             ax.legend()
             st.pyplot(fig)
-
-
-
-    st.write("Estatísticas dos retornos diários logarítmicos:")
-    st.dataframe(log_returns_stats, use_container_width=True)
-    st.write("Estatísticas dos retornos logarítmicos anualizados:")
-    st.dataframe(log_annualized_returns, use_container_width=True)
     
     st.write("## Desvios da Normalidade")
     skew_table_lg = pd.DataFrame(columns=[
@@ -153,7 +209,9 @@ with log:
             'Kurtosis': log_returns[column].kurtosis(),
             'Jarque-Bera': stats.jarque_bera(log_returns[column])[0],
             'p-value': stats.jarque_bera(log_returns[column])[1],
-            'Distribuição': 'Normal' if abs(log_returns[column].skew()) < 0.5 and abs(log_returns[column].kurtosis()) < 3 else 'Não Normal'
+            'Distribuição': 'Normal' if abs(log_returns[column].skew()) < 0.5 and abs(log_returns[column].kurtosis()) < 3 else 'Não Normal',
+            'Desvio Semi-condicional': semideviation(log_returns[column])
+            
         }
         skew_table_lg = pd.concat([skew_table_lg, pd.DataFrame([row])], ignore_index=True)
 
@@ -194,32 +252,43 @@ with log:
 
     st.write("## Value at Risk (VaR)")
 
-    historical_var = pd.DataFrame(log_returns.quantile(0.05))
-    historical_var.reset_index(inplace=True)
-    historical_var.columns = ['Ticker', 'Histórico']
-    historical_var['Histórico'] = historical_var['Histórico'] * -1
+    historical_var_lg = pd.DataFrame(log_returns.quantile(0.05))
+    historical_var_lg.reset_index(inplace=True)
+    historical_var_lg.columns = ['Ação', 'Histórico']
+    historical_var_lg['Histórico'] = historical_var['Histórico'] * -1
 
     z = stats.norm.ppf(0.05)
-    VaR_parametric = pd.DataFrame(
+    VaR_parametric_lg = pd.DataFrame(
         (log_returns.mean() - z * log_returns.std())
     )
 
-    VaR_parametric.reset_index(inplace=True)
-    VaR_parametric.columns = ['Ticker', 'Gaussiano']
+    VaR_parametric_lg.reset_index(inplace=True)
+    VaR_parametric_lg.columns = ['Ação', 'Gaussiano']
 
-    VaR_fs = pd.DataFrame(var_gaussian(log_returns, level=0.05, modified=True))
-    VaR_fs.reset_index(inplace=True)
-    VaR_fs.columns = ['Ticker', 'Cornish-Fisher']
+    VaR_fs_lg = pd.DataFrame(var_gaussian(log_returns, level=0.05, modified=True))
+    VaR_fs_lg.reset_index(inplace=True)
+    VaR_fs_lg.columns = ['Ação', 'Cornish-Fisher']
+
+    beyond_var_lg =pd.DataFrame(cvar_historic(log_returns, level=0.05))
+    beyond_var_lg.reset_index(inplace=True)
+    beyond_var_lg.columns = ['Ação', 'Beyond VaR']
     
-    VaR_log = pd.merge(historical_var, VaR_parametric, on='Ticker')
-    VaR_log = pd.merge(VaR_log, VaR_fs, on='Ticker')
+    VaR_log = pd.merge(historical_var_lg, VaR_parametric_lg, on='Ação')
+    VaR_log = pd.merge(VaR_log, VaR_fs_lg, on='Ação')
+    VaR_log = pd.merge(VaR_log, beyond_var_lg, on='Ação')
 
-    VaR_graph =px.bar(VaR_log, x='Ticker', y=['Histórico', 'Gaussiano', 'Cornish-Fisher'], title='Value at Risk (VaR)', labels={'x': 'Ação', 'y': 'VaR'})
+    VaR_graph =px.bar(VaR_log, x='Ação', y=['Histórico', 'Gaussiano', 'Cornish-Fisher'], title='Value at Risk (VaR)', labels={'x': 'Ação', 'y': 'VaR'})
     VaR_graph.update_layout(barmode='group', xaxis_title='Ação', yaxis_title='VaR')
 
     st.plotly_chart(VaR_graph, use_container_width=True)
 
     st.write(VaR_log)
+
+    semideviation(log_returns)
+
+   
+
+
 
 
 
