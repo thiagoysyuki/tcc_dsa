@@ -5,7 +5,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
 import json
+
 from pypfopt.expected_returns import mean_historical_return, ema_historical_return
+
  
 
 # Load Data

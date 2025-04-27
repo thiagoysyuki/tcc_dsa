@@ -7,7 +7,7 @@ import plotly.express as px
 import scipy.stats as stats
 from pypfopt.expected_returns import mean_historical_return
 from misc.otm_oportfolio import var_gaussian,cvar_historic, semideviation
-import os
+import misc.edhec_risk as erk
 import statsmodels.api as sm
 
 selic = st.session_state['selic']
