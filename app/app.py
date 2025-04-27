@@ -356,7 +356,6 @@ with Riscos:
 
         semideviation(log_returns)
 
-
 with Otimização:
     st.write("## Fronteira Eficiênte")
 
@@ -368,7 +367,7 @@ with Otimização:
 
     investimento_input = st.number_input(label="Investimento R$", value=1000)
 
-    experimento = backtest_markowitz(prices=historico, backtest=backtest,investimento=investimento_input, risk_free=seletor_selic)
+    experimento = backtest_markowitz(prices=historico, backtest=backtest,investimento=investimento_input, risk_free=seletor_selic/100)
     experimento.optimization_mv()
     experimento.backtest_performance()
 
