@@ -17,8 +17,9 @@ import statsmodels.api as sm
 
 url_indices ="https://drive.google.com/uc?export=download&id=14Pmao4Gp_MfjBrK7rva5OwLSBuIk-EXa"
 url_stocks = "https://drive.google.com/uc?export=download&id=1g_yX6EsOAPNBJf5NIrcMnCqQ_FXhtGdw"
+url_selic ="https://drive.google.com/uc?export=download&id=1q1BhAcBipfqPbR4-udpg7yfbwPMsMrWt"
 
-selic = pd.read_parquet(path= 'data/raw/selic/selic.parquet')
+selic = pd.read_parquet(path= url_selic)
 selic.set_index('date', inplace=True)
 selic['value'] = selic['value'].astype(float)
 stocks = pd.read_parquet(path= url_stocks)
