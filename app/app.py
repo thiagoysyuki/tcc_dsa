@@ -7,13 +7,8 @@ import plotly.express as px
 from pypfopt.expected_returns import mean_historical_return, ema_historical_return
 import scipy.stats as stats
 from misc.otm_oportfolio import var_gaussian,cvar_historic, semideviation
-from pypfopt.efficient_frontier import EfficientFrontier
-from pypfopt.risk_models import sample_cov
-from pypfopt import plotting
 from plotnine import *
 from misc.otm_oportfolio import backtest_markowitz
-import misc.edhec_risk as erk
-import statsmodels.api as sm
 
 url_indices ="https://drive.google.com/uc?export=download&id=14Pmao4Gp_MfjBrK7rva5OwLSBuIk-EXa"
 url_stocks = "https://drive.google.com/uc?export=download&id=1g_yX6EsOAPNBJf5NIrcMnCqQ_FXhtGdw"
