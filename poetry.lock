@@ -1387,6 +1387,33 @@ files = [
 traitlets = "*"
 
 [[package]]
+name = "mizani"
+version = "0.13.3"
+description = "Scales for Python"
+optional = false
+python-versions = ">=3.10"
+files = [
+    {file = "mizani-0.13.3-py3-none-any.whl", hash = "sha256:073235f58a2df47c6601a86b64b029964d5e2429622a6d2d5edd23634550c719"},
+    {file = "mizani-0.13.3.tar.gz", hash = "sha256:8325ccce41803122803a664d7a4996a285cb0641f3e2fd67a94a762901d81f3c"},
+]
+
+[package.dependencies]
+numpy = ">=1.23.5"
+pandas = ">=2.2.0"
+scipy = ">=1.8.0"
+tzdata = {version = "*", markers = "platform_system == \"Windows\" or platform_system == \"Emscripten\""}
+
+[package.extras]
+all = ["mizani[build]", "mizani[dev]", "mizani[doc]", "mizani[lint]", "mizani[test]"]
+build = ["build", "wheel"]
+dev = ["mizani[typing]", "notebook", "pre-commit", "twine"]
+doc = ["numpydoc (>=1.7.0)", "sphinx (>=7.2.0)"]
+lint = ["ruff"]
+rtd = ["mock"]
+test = ["pytest-cov (>=4.0.0)"]
+typing = ["pandas-stubs", "pyright (==1.1.398)"]
+
+[[package]]
 name = "narwhals"
 version = "1.35.0"
 description = "Extremely lightweight compatibility layer between dataframe libraries"
@@ -1808,6 +1835,35 @@ files = [
 [package.dependencies]
 packaging = "*"
 tenacity = ">=6.2.0"
+
+[[package]]
+name = "plotnine"
+version = "0.14.5"
+description = "A Grammar of Graphics for Python"
+optional = false
+python-versions = ">=3.10"
+files = [
+    {file = "plotnine-0.14.5-py3-none-any.whl", hash = "sha256:4a8bc4360732dd69a0263def4abab285ed8f0f4386186f1e44c642f2cea79b88"},
+    {file = "plotnine-0.14.5.tar.gz", hash = "sha256:9e75969e8e10d8d770a4be36d10e075cc10b88ca6fcc99e36ada53436fb5653f"},
+]
+
+[package.dependencies]
+matplotlib = ">=3.8.0"
+mizani = ">=0.13.0,<0.14.0"
+numpy = ">=1.23.5"
+pandas = ">=2.2.0"
+scipy = ">=1.8.0"
+statsmodels = ">=0.14.0"
+
+[package.extras]
+all = ["plotnine[build]", "plotnine[dev]", "plotnine[doc]", "plotnine[extra]", "plotnine[lint]", "plotnine[test]"]
+build = ["build", "wheel"]
+dev = ["plotnine[typing]", "pre-commit", "twine"]
+doc = ["click", "jupyter", "nbsphinx", "numpydoc (>=0.9.1)", "quartodoc (>=0.7.2)"]
+extra = ["adjustText (>=1.2.0)", "geopandas (>=1.0.0)", "scikit-learn (>1.2.0)", "scikit-misc (>=0.5.1)"]
+lint = ["ruff"]
+test = ["pytest-cov (>=4.0.0)"]
+typing = ["ipython", "pandas-stubs", "pyright (==1.1.391)"]
 
 [[package]]
 name = "prompt-toolkit"
@@ -2931,4 +2987,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "0050b34ed2a5995fdf7c5fca15c699dee40cb2b2d539661c3ad75780346ef38f"
+content-hash = "ff7489a49cad6e2b811902831fa780ac52129538eb48d86b41a325e4a45cd07a"
