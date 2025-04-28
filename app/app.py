@@ -386,7 +386,7 @@ with Otimização:
 
     with col_data_inicio:
         data_historico_inicio = st.date_input(label="Período Historico inicio", value=filtered_data.index.min(), format="DD/MM/YYYY")
-        data_historico_fim = st.date_input(label="Período Historico fim", value= filtered_data.index.max() - timedelta(days=365), format="DD/MM/YYYY")
+        data_historico_fim = st.date_input(label="Período Historico fim", value= datetime(2023,12,31), format="DD/MM/YYYY")
         
     
     with col_data_fim: 
