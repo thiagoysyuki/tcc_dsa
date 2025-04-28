@@ -76,7 +76,7 @@ class backtest_markowitz:
         start_investment_msr = pd.DataFrame(start_investment_msr)
         start_investment_ew = pd.DataFrame(start_investment_ew)
 
-        initial_position = pd.concat([start_investment_mv,start_investment_msr, start_investment_ew],join="inner")
+        initial_position = pd.concat([start_investment_mv,start_investment_msr, start_investment_ew])
         
         evol_mgv = initial_position.loc["MGV",:] * backtest
         evol_msr = initial_position.loc["MSR",:] * backtest

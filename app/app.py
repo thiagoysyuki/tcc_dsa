@@ -10,15 +10,23 @@ from misc.otm_oportfolio import var_gaussian,cvar_historic, semideviation
 from plotnine import *
 from misc.otm_oportfolio import backtest_markowitz
 
+plt.rcParams.update({'figure.max_open_warning': 0})
+
 url_indices ="https://drive.google.com/uc?export=download&id=14Pmao4Gp_MfjBrK7rva5OwLSBuIk-EXa"
 url_stocks = "https://drive.google.com/uc?export=download&id=1g_yX6EsOAPNBJf5NIrcMnCqQ_FXhtGdw"
 url_selic ="https://drive.google.com/uc?export=download&id=1q1BhAcBipfqPbR4-udpg7yfbwPMsMrWt"
 
-selic = pd.read_parquet(path= url_selic)
+@st.cache_data
+def trazer_parquet(path):
+    data = pd.read_parquet(path)
+    return data
+    
+
+selic = trazer_parquet(path= url_selic)
 selic.set_index('date', inplace=True)
 selic['value'] = selic['value'].astype(float)
-stocks = pd.read_parquet(path= url_stocks)
-indices = pd.read_parquet(path= url_indices)
+stocks = trazer_parquet(path= url_stocks)
+indices = trazer_parquet(path= url_indices)
 indices.columns = indices.columns.str.replace('^', '', regex=False)
 trading_days = stocks.index.to_series().groupby(stocks.index.year).nunique()
 trading_days = pd.DataFrame({'ano':trading_days.index,'dias_uteis':trading_days.values})
@@ -49,7 +57,7 @@ filtered_data = pd.merge(filtered_stock_data, filtered_index_data, left_index=Tr
 Retornos, Riscos, Otimização = st.tabs(["Análise dos Retornos","Análise Riscos","Otimização"])
 
 with Retornos:    
-    simple_returns = filtered_data.pct_change().dropna()
+    simple_returns = filtered_data.dropna().pct_change( )
     log_returns = np.log(filtered_data / filtered_data.shift(1)).dropna()
 
     cum_return = filtered_data.copy()
@@ -156,12 +164,12 @@ with Riscos:
                 'p-value': stats.jarque_bera(simple_returns[column])[1],
                 'Distribuição': 'Normal' if abs(simple_returns[column].skew()) < 0.5 and abs(simple_returns[column].kurtosis()) < 3 else 'Não Normal'
             }
-            skew_table = pd.concat([skew_table, pd.DataFrame([row])], ignore_index=True)
+            #skew_table = pd.concat([skew_table, pd.DataFrame([row])], ignore_index=True, axis=0)
 
         # Format the 'p-value' column to scientific notation
-        skew_table['p-value'] = skew_table['p-value'].apply(lambda x: f"{x:.2e}")
+        #skew_table['p-value'] = skew_table['p-value'].apply(lambda x: f"{x:.2e}")
 
-        st.write(skew_table)
+        #st.write(skew_table)
 
         st.write("## Drawdown Máximo")	
 
@@ -283,12 +291,12 @@ with Riscos:
                 'Desvio Semi-condicional': semideviation(log_returns[column])
 
             }
-            skew_table_lg = pd.concat([skew_table_lg, pd.DataFrame([row])], ignore_index=True)
+            #skew_table_lg = pd.concat([skew_table_lg, pd.DataFrame([row])], ignore_index=True)
 
         # Format the 'p-value' column to scientific notation
-        skew_table_lg['p-value'] = skew_table_lg['p-value'].apply(lambda x: f"{x:.2e}")
+        #skew_table_lg['p-value'] = skew_table_lg['p-value'].apply(lambda x: f"{x:.2e}")
 
-        st.write(skew_table_lg)
+        #st.write(skew_table_lg)
 
         st.write("## Drawdown Máximo")	
 
@@ -360,10 +368,10 @@ with Otimização:
     st.write("## Fronteira Eficiênte")
 
     data_historico = st.date_input(label="Período Historico", value=(filtered_data.index.min(), filtered_data.index.max()), format="DD/MM/YYYY")
-    historico = filtered_data[data_historico[0]:data_historico[1]]
+    historico = filtered_data[data_historico[0]:data_historico[1]].dropna()
 
     data_backtest = st.date_input(label="Período de Backtest", value=(filtered_data.index.min(), filtered_data.index.max()), format="DD/MM/YYYY")
-    backtest = filtered_data[data_backtest[0]:data_backtest[1]]
+    backtest = filtered_data[data_backtest[0]:data_backtest[1]].dropna()
 
     investimento_input = st.number_input(label="Investimento R$", value=1000)
 
