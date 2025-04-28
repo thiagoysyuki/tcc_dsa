@@ -104,7 +104,7 @@ class backtest_markowitz:
         ax.scatter(std_tangent, ret_tangent, marker="*", s=100, c="r", label="Max Sharpe")
 
         # Generate random portfolios
-        n_samples = 30000
+        n_samples = 500
         w = np.random.dirichlet(np.ones(ef.n_assets), n_samples)
         rets = w.dot(ef.expected_returns)
         stds = np.sqrt(np.diag(w @ ef.cov_matrix @ w.T))
