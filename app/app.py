@@ -54,7 +54,7 @@ with st.sidebar:
     seletor_stock = st.multiselect("Ações", tickers,placeholder="Selecione as ações", default=tickers_list)
     seletor_index = st.multiselect("Índices", indexes,placeholder="Selecione os índices")
     seletor_selic = st.slider("Selic", min_value=selic['value'].min(),max_value=selic['value'].max(), value=11.75)
-    sel_data_inicio = st.date_input("Selecione data de início", value= datetime(2021,01,01), format="DD/MM/YYYY")
+    sel_data_inicio = st.date_input("Selecione data de início", value= datetime(2021,1,1), format="DD/MM/YYYY")
     sel_data_fim = st.date_input("Selecione data de fim", value= datetime(2023,12,31), format="DD/MM/YYYY")
 
 
