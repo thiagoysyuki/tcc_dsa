@@ -33,7 +33,7 @@ with st.sidebar:
     st.write("### Selecione o perído de Análise")
     seletor_stock = st.multiselect("Ações", tickers,placeholder="Selecione as ações", default=['ITUB4', 'B3SA3', 'PETR4'])
     seletor_index = st.multiselect("Índices", indexes,placeholder="Selecione os índices")
-    seletor_selic = st.slider("Selic", min_value=selic['value'].min(),max_value=selic['value'].max())
+    seletor_selic = st.slider("Selic", min_value=selic['value'].min(),max_value=selic['value'].max(), value=selic['value'].min())
     sel_data = st.date_input("Selecione o intervalo de datas", value=(stocks.index.min(), stocks.index.max()), format="DD/MM/YYYY")
 
 
@@ -366,6 +366,8 @@ with Otimização:
     backtest = filtered_data[data_backtest[0]:data_backtest[1]]
 
     investimento_input = st.number_input(label="Investimento R$", value=1000)
+
+    st.write(seletor_selic)
 
     experimento = backtest_markowitz(prices=historico, backtest=backtest,investimento=investimento_input, risk_free=seletor_selic/100)
     experimento.optimization_mv()

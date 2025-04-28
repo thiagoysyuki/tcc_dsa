@@ -38,7 +38,7 @@ class backtest_markowitz:
                 gmv.append(portfolio)
             else:
                 ef = EfficientFrontier(self.mu, self.S, weight_bounds=(0, 1))
-                portfolio = ef.max_sharpe(risk_free_rate=self.risk_free/100)
+                portfolio = ef.max_sharpe(risk_free_rate=self.risk_free)
                 msr.append(portfolio)
 
         mgv = pd.DataFrame(list(gmv[0].items()), columns=['Ticker', 'MGV'])
@@ -76,7 +76,7 @@ class backtest_markowitz:
         start_investment_msr = pd.DataFrame(start_investment_msr)
         start_investment_ew = pd.DataFrame(start_investment_ew)
 
-        initial_position = pd.concat([start_investment_mv,start_investment_msr, start_investment_ew])
+        initial_position = pd.concat([start_investment_mv,start_investment_msr, start_investment_ew],join="inner")
         
         evol_mgv = initial_position.loc["MGV",:] * backtest
         evol_msr = initial_position.loc["MSR",:] * backtest
@@ -99,7 +99,7 @@ class backtest_markowitz:
         plotting.plot_efficient_frontier(ef, ax=ax, show_assets=True, show_tickers=True, )
 
         # Find the tangency portfolio
-        ef_max_sharpe.max_sharpe(risk_free_rate= self.risk_free/100)
+        ef_max_sharpe.max_sharpe(risk_free_rate= self.risk_free)
         ret_tangent, std_tangent, _ = ef_max_sharpe.portfolio_performance()
         ax.scatter(std_tangent, ret_tangent, marker="*", s=100, c="r", label="Max Sharpe")
 
