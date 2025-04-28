@@ -42,12 +42,7 @@ tickers_list = [
     "ITUB4",
     "PETR4",
     "ELET3",
-    "BBAS3",
-    "SBSP3",
-    "PETR3",
-    "B3SA3",
-    "BBDC4",
-    "WEGE3",
+    "BBAS3"
 ]
 
 
