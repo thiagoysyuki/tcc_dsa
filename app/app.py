@@ -67,7 +67,7 @@ with Retornos:
 
     # Grafico das ações
 
-    st.plotly_chart(stocks_graph, use_container_width=True)
+    st.plotly_chart(stocks_graph)
 
     st.write("# Análise dos Retornos:")
 
@@ -81,7 +81,7 @@ with Retornos:
 
     mu = mu.reset_index()
     mu.columns = ['Ticker', 'Retorno Anualizado']
-    st.dataframe(mu, use_container_width=True)
+    st.dataframe(mu)
 
 
     st.write("Retorno Anualizados (EMA):")
@@ -90,12 +90,12 @@ with Retornos:
     ema_return = ema_historical_return(filtered_data, span=span_select, frequency=250).to_frame()
     ema_return = ema_return.reset_index()
     ema_return.columns = ['Ticker', 'Retorno Anualizado']
-    st.dataframe(ema_return, use_container_width=True)
+    st.dataframe(ema_return)
 
     st.write("Taxa SELIC")
 
     selic_graph = px.line(selic, x=selic.index,y=selic['value'], title='Taxa SELIC', labels={'x': 'Índice (Datas)', 'y': 'Taxa SELIC'})
-    st.plotly_chart(selic_graph, use_container_width=True)
+    st.plotly_chart(selic_graph)
 
 with Riscos:
     simples, log = st.tabs(["Simples","Logarítmico"])
@@ -124,9 +124,9 @@ with Riscos:
             trendline_color_override='red',  # Change the color of the regression line
 
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig)
 
-        st.dataframe(dados_anualizados, use_container_width=True)
+        st.dataframe(dados_anualizados)
 
         tabs_desity = st.tabs(list(simple_returns.columns))
         for i, tab_name in enumerate(simple_returns.columns):
@@ -222,7 +222,7 @@ with Riscos:
         VaR_graph =px.bar(VaR_simple, x='Ação', y=['Histórico', 'Gaussiano', 'Cornish-Fisher'], title='Value at Risk (VaR)', labels={'x': 'Ação', 'y': 'VaR'})
         VaR_graph.update_layout(barmode='group', xaxis_title='Ação', yaxis_title='VaR')
 
-        st.plotly_chart(VaR_graph, use_container_width=True)
+        st.plotly_chart(VaR_graph)
 
         st.write(VaR_simple)
 
@@ -251,8 +251,8 @@ with Riscos:
             trendline="ols",  # Add Ordinary Least Squares (OLS) regression line
             trendline_color_override='red',  # Change the color of the regression line
         )
-        st.plotly_chart(fig, use_container_width=True)
-        st.write(dados_anualizados_lg, use_container_width=True)
+        st.plotly_chart(fig)
+        st.write(dados_anualizados_lg)
 
         tabs_desity_lg = st.tabs(list(log_returns.columns))
         for i, tab_name in enumerate(log_returns.columns):
@@ -350,7 +350,7 @@ with Riscos:
         VaR_graph =px.bar(VaR_log, x='Ação', y=['Histórico', 'Gaussiano', 'Cornish-Fisher'], title='Value at Risk (VaR)', labels={'x': 'Ação', 'y': 'VaR'})
         VaR_graph.update_layout(barmode='group', xaxis_title='Ação', yaxis_title='VaR')
 
-        st.plotly_chart(VaR_graph, use_container_width=True)
+        st.plotly_chart(VaR_graph)
 
         st.write(VaR_log)
 

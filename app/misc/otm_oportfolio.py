@@ -100,7 +100,7 @@ class backtest_markowitz:
 
         # Find the tangency portfolio
         ef_max_sharpe.max_sharpe(risk_free_rate= self.risk_free)
-        ret_tangent, std_tangent, _ = ef_max_sharpe.portfolio_performance()
+        ret_tangent, std_tangent, _ = ef_max_sharpe.portfolio_performance(risk_free_rate=self.risk_free)
         ax.scatter(std_tangent, ret_tangent, marker="*", s=100, c="r", label="Max Sharpe")
 
         # Generate random portfolios
