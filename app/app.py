@@ -55,7 +55,7 @@ with st.sidebar:
     seletor_index = st.multiselect("Índices", indexes,placeholder="Selecione os índices")
     seletor_selic = st.slider("Selic", min_value=selic['value'].min(),max_value=selic['value'].max(), value=11.75)
     sel_data_inicio = st.date_input("Selecione data de início", value= datetime(2021,1,1), format="DD/MM/YYYY")
-    sel_data_fim = st.date_input("Selecione data de fim", value= datetime(2023,12,31), format="DD/MM/YYYY")
+    sel_data_fim = st.date_input("Selecione data de fim", value= datetime(2024,12,31), format="DD/MM/YYYY")
 
 
 #Filtrar dados
@@ -390,7 +390,7 @@ with Otimização:
         
     
     with col_data_fim: 
-       data_backtest_inicio = st.date_input(label="início Backtest", value = data_historico_fim - timedelta(days=1), format="DD/MM/YYYY")
+       data_backtest_inicio = st.date_input(label="início Backtest", value = data_historico_fim + timedelta(days=1), format="DD/MM/YYYY")
        data_backtest_fim = st.date_input(label="Fim Backtest", value= filtered_data.index.max(),format="DD/MM/YYYY")
 
     
