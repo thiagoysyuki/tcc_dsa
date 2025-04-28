@@ -33,11 +33,11 @@ class backtest_markowitz:
 
         for ef_port in portfolios.keys():
             if ef_port == "gmv":
-                ef = EfficientFrontier(self.mu, self.S, weight_bounds=(0, 1))
+                ef = EfficientFrontier(self.mu, self.S, weight_bounds=(0, 1), solver='SCS', verbose=True)
                 portfolio = ef.min_volatility()
                 gmv.append(portfolio)
             else:
-                ef = EfficientFrontier(self.mu, self.S, weight_bounds=(0, 1))
+                ef = EfficientFrontier(self.mu, self.S, weight_bounds=(0, 1), solver='SCS',verbose=True)
                 portfolio = ef.max_sharpe(risk_free_rate=self.risk_free)
                 msr.append(portfolio)
 
@@ -93,7 +93,7 @@ class backtest_markowitz:
         
     
     def fronteira_eficiente_plot(self):
-        ef = EfficientFrontier(self.mu, self.S, weight_bounds=(0, 1))
+        ef = EfficientFrontier(self.mu, self.S, weight_bounds=(0, 1), solver='SCS', verbose=True)
         fig, ax = plt.subplots(figsize=(10, 6))
         ef_max_sharpe = ef.deepcopy()
         plotting.plot_efficient_frontier(ef, ax=ax, show_assets=True, show_tickers=True, )
@@ -119,8 +119,6 @@ class backtest_markowitz:
         plt.tight_layout()
         return fig, ax
       
-
-    
     def start_opt(self):
         self.optimization_mv(self)
         self.backtest_performance(self)

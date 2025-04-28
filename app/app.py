@@ -9,11 +9,12 @@ import scipy.stats as stats
 from misc.otm_oportfolio import var_gaussian,cvar_historic, semideviation
 from plotnine import *
 from misc.otm_oportfolio import backtest_markowitz
+from datetime import datetime, timedelta
 
 plt.rcParams.update({'figure.max_open_warning': 0})
 
-url_indices ="https://drive.google.com/uc?export=download&id=14Pmao4Gp_MfjBrK7rva5OwLSBuIk-EXa"
-url_stocks = "https://drive.google.com/uc?export=download&id=1g_yX6EsOAPNBJf5NIrcMnCqQ_FXhtGdw"
+url_indices ="https://drive.google.com/uc?export=download&id=1nk7adCx-VGXKkicD2vmqGxYF4tBZw-1O"
+url_stocks = "https://drive.google.com/uc?export=download&id=1erTCQsKviL5wY1D2ZcrDpXE75AT5cyre"
 url_selic ="https://drive.google.com/uc?export=download&id=1q1BhAcBipfqPbR4-udpg7yfbwPMsMrWt"
 
 @st.cache_data
@@ -26,6 +27,7 @@ selic = trazer_parquet(path= url_selic)
 selic.set_index('date', inplace=True)
 selic['value'] = selic['value'].astype(float)
 stocks = trazer_parquet(path= url_stocks)
+stocks = stocks.astype('float')
 indices = trazer_parquet(path= url_indices)
 indices.columns = indices.columns.str.replace('^', '', regex=False)
 trading_days = stocks.index.to_series().groupby(stocks.index.year).nunique()
@@ -33,23 +35,39 @@ trading_days = pd.DataFrame({'ano':trading_days.index,'dias_uteis':trading_days.
 tickers = stocks.columns
 indexes = indices.columns
 
+st.write(indices.info())
+
+tickers_list = [
+    "VALE3",
+    "ITUB4",
+    "PETR4",
+    "ELET3",
+    "BBAS3",
+    "SBSP3",
+    "PETR3",
+    "B3SA3",
+    "BBDC4",
+    "WEGE3",
+]
+
 
 with st.sidebar:
     st.image("app/img/logo_app.png")
     st.write("## Otimizador de Investimentos")
     st.write("Feito por Thiago Yuki")
     st.write("### Selecione o perído de Análise")
-    seletor_stock = st.multiselect("Ações", tickers,placeholder="Selecione as ações", default=['ITUB4', 'B3SA3', 'PETR4'])
+    seletor_stock = st.multiselect("Ações", tickers,placeholder="Selecione as ações", default=tickers_list)
     seletor_index = st.multiselect("Índices", indexes,placeholder="Selecione os índices")
     seletor_selic = st.slider("Selic", min_value=selic['value'].min(),max_value=selic['value'].max(), value=selic['value'].min())
-    sel_data = st.date_input("Selecione o intervalo de datas", value=(stocks.index.min(), stocks.index.max()), format="DD/MM/YYYY")
+    sel_data_inicio = st.date_input("Selecione data de início", value=(stocks.index.min()), format="DD/MM/YYYY")
+    sel_data_fim = st.date_input("Selecione data de fim", value=(stocks.index.max()), format="DD/MM/YYYY")
 
 
 #Filtrar dados
 filtered_index_data = indices[seletor_index]
-filtered_stock_data = stocks[seletor_stock]
-filtered_stock_data = filtered_stock_data.loc[sel_data[0]:sel_data[1]]
-filtered_index_data = filtered_index_data.loc[sel_data[0]:sel_data[1]]
+filtered_stock_data = stocks[seletor_stock].dropna()
+filtered_stock_data = filtered_stock_data[sel_data_inicio:sel_data_fim]
+filtered_index_data = filtered_index_data[sel_data_inicio:sel_data_fim]
 filtered_data = pd.merge(filtered_stock_data, filtered_index_data, left_index=True, right_index=True, how='inner')
 
 ###--------------------------------------------------------------------------------------------------------##
@@ -57,8 +75,10 @@ filtered_data = pd.merge(filtered_stock_data, filtered_index_data, left_index=Tr
 Retornos, Riscos, Otimização = st.tabs(["Análise dos Retornos","Análise Riscos","Otimização"])
 
 with Retornos:    
-    simple_returns = filtered_data.dropna().pct_change( )
+    simple_returns = filtered_data.pct_change().dropna()
     log_returns = np.log(filtered_data / filtered_data.shift(1)).dropna()
+
+    st.dataframe(filtered_data)
 
     cum_return = filtered_data.copy()
 
@@ -366,12 +386,24 @@ with Riscos:
 
 with Otimização:
     st.write("## Fronteira Eficiênte")
+    
+    col_data_inicio,col_data_fim = st.columns(2)
 
-    data_historico = st.date_input(label="Período Historico", value=(filtered_data.index.min(), filtered_data.index.max()), format="DD/MM/YYYY")
-    historico = filtered_data[data_historico[0]:data_historico[1]].dropna()
+    with col_data_inicio:
+        data_historico_inicio = st.date_input(label="Período Historico inicio", value=filtered_data.index.min(), format="DD/MM/YYYY")
+        data_historico_fim = st.date_input(label="Período Historico fim", value= filtered_data.index.max() - timedelta(days=365), format="DD/MM/YYYY")
+        
+    
+    with col_data_fim: 
+       data_backtest_inicio = st.date_input(label="início Backtest", value = data_historico_fim - timedelta(days=1), format="DD/MM/YYYY")
+       data_backtest_fim = st.date_input(label="Fim Backtest", value= filtered_data.index.max(),format="DD/MM/YYYY")
 
-    data_backtest = st.date_input(label="Período de Backtest", value=(filtered_data.index.min(), filtered_data.index.max()), format="DD/MM/YYYY")
-    backtest = filtered_data[data_backtest[0]:data_backtest[1]].dropna()
+    
+    
+    
+    historico = filtered_data[data_historico_inicio:data_historico_fim].dropna()
+      
+    backtest = filtered_data[data_backtest_inicio:data_backtest_fim].dropna()
 
     investimento_input = st.number_input(label="Investimento R$", value=1000)
 
