@@ -84,9 +84,9 @@ with Retornos:
     st.write(cum_return.tail(1))
 
 
-    stocks_graph = px.line(title='Retorno Acumulado', labels={'x': 'Índice (Datas)', 'y': 'Retorno simples'})
-    for column in cum_return.columns:
-        stocks_graph.add_scatter(x=cum_return.index, y=cum_return[column], mode='lines', name=column)
+    stocks_graph = px.line(title='Preço das Ações', labels={'x': 'Índice (Datas)', 'y': 'Preço R$'})
+    for column in filtered_data.columns:
+        stocks_graph.add_scatter(x=filtered_data.index, y=filtered_data[column], mode='lines', name=column)
 
     # Grafico das ações
 
