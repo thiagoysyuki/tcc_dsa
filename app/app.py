@@ -35,7 +35,7 @@ trading_days = pd.DataFrame({'ano':trading_days.index,'dias_uteis':trading_days.
 tickers = stocks.columns
 indexes = indices.columns
 
-st.write(indices.info())
+
 
 tickers_list = [
     "VALE3",
@@ -44,6 +44,7 @@ tickers_list = [
     "ELET3",
     "BBAS3"
 ]
+
 
 
 with st.sidebar:
@@ -57,6 +58,16 @@ with st.sidebar:
     sel_data_inicio = st.date_input("Selecione data de início", value= datetime(2021,1,1), format="DD/MM/YYYY")
     sel_data_fim = st.date_input("Selecione data de fim", value= datetime(2024,12,31), format="DD/MM/YYYY")
 
+retorno_anualizado = pd.DataFrame(mean_historical_return(stocks, log_returns=False, frequency=252))
+retorno_anualizado.reset_index(inplace=True)
+retorno_anualizado.columns = ['Ações','Retorno Anualizado']
+volatilidade_anualizada = pd.DataFrame(stocks.pct_change().dropna().std() * 252 ** 0.5)
+volatilidade_anualizada.reset_index(inplace=True)
+volatilidade_anualizada.columns = ['Ações','Volatilidade Anualizada']
+dados_anualizados = pd.merge(retorno_anualizado, volatilidade_anualizada, on='Ações')
+dados_anualizados['Sharpe Ratio'] = (dados_anualizados['Retorno Anualizado'] - seletor_selic) / dados_anualizados['Volatilidade Anualizada']
+
+st.write(dados_anualizados)
 
 #Filtrar dados
 filtered_index_data = indices[seletor_index]
