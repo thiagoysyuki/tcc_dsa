@@ -86,6 +86,8 @@ with Retornos:
     simple_returns = filtered_data.pct_change().dropna()
     log_returns = np.log(filtered_data / filtered_data.shift(1)).dropna()
 
+    st.write("## Tabela dos Preços")
+
     st.dataframe(filtered_data)
 
     cum_return = filtered_data.copy()
