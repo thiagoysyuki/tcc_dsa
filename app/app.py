@@ -68,7 +68,7 @@ dados_anualizados = pd.merge(retorno_anualizado, volatilidade_anualizada, on='A�
 dados_anualizados['Sharpe Ratio'] = (dados_anualizados['Retorno Anualizado'] - seletor_selic) / dados_anualizados['Volatilidade Anualizada']
 
 st.write("## Performance histórica das Ações")
-st.write ( "Uutilize os indicadores para selecionar as ações que vão compor seu portifólio."
+st.write("utilize os indicadores para selecionar as ações que vão compor seu portifólio.")
 st.write(dados_anualizados)
 
 #Filtrar dados
