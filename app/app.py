@@ -449,6 +449,12 @@ with Otimização:
 
     st.plotly_chart(evol_retornos)
 
+    variancia = retornos_cumulativos.std()
+
+    st.write(variancia)
+
+    
+
    
 
 
